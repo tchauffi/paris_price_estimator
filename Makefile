@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup pre-commit lint format check test clean build
+.PHONY: help install install-dev setup pre-commit lint format check test clean build ci
 
 # Default target
 help:
@@ -13,6 +13,7 @@ help:
 	@echo "  test         - Run tests (when available)"
 	@echo "  clean        - Clean build artifacts and cache"
 	@echo "  build        - Build the package"
+	@echo "  ci           - Run all CI checks locally"
 
 # Install production dependencies only
 install:
@@ -68,3 +69,7 @@ update:
 # Run pre-commit on all files
 pre-commit-all:
 	poetry run pre-commit run --all-files
+
+# Run all CI checks locally
+ci: check pre-commit-all
+	@echo "All CI checks passed!"
