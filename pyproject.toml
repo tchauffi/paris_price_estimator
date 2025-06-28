@@ -1,0 +1,37 @@
+[project]
+name = "paris-price-estimator"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Thibaut CHAUFFIER",email = "tchauffi@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas (>=2.3.0,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "price_estimator", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.1"
+pre-commit = "^4.0.1"
+
+[tool.ruff]
+# Set the maximum line length to 79.
+line-length = 79
+
+[tool.ruff.lint]
+extend-select = [
+  "E501", # pycodestyle
+  "UP",  # pyupgrade
+  "D",   # pydocstyle
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
