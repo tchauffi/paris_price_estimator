@@ -10,7 +10,8 @@ help:
 	@echo "  lint         - Run ruff linter"
 	@echo "  format       - Run ruff formatter"
 	@echo "  check        - Run both linting and formatting checks"
-	@echo "  test         - Run tests (when available)"
+	@echo "  test         - Run tests with pytest"
+	@echo "  test-cov     - Run tests with coverage report"
 	@echo "  clean        - Clean build artifacts and cache"
 	@echo "  build        - Build the package"
 	@echo "  ci           - Run all CI checks locally"
@@ -45,10 +46,13 @@ check: lint
 	poetry run ruff check . --diff
 	poetry run ruff format . --check
 
-# Run tests (placeholder for when tests are added)
+# Run tests
 test:
-	@echo "No tests configured yet"
-	# poetry run pytest
+	poetry run pytest tests/ -v
+
+# Run tests with coverage
+test-cov:
+	poetry run pytest tests/ -v --cov=src --cov-report=term-missing
 
 # Clean build artifacts and cache
 clean:

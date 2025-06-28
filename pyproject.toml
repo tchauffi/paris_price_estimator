@@ -23,10 +23,12 @@ ruff = "^0.12.1"
 pre-commit = "^4.0.1"
 ipykernel = "^6.29.5"
 ipywidgets = "^8.1.7"
+pytest = "^8.0.0"
+pytest-cov = "^4.0.0"
 
 [tool.ruff]
-# Set the maximum line length to 79.
-line-length = 79
+# Set the maximum line length to 88.
+line-length = 88
 
 [tool.ruff.lint]
 extend-select = [
@@ -37,3 +39,18 @@ extend-select = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-v",
+]
+markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+]
