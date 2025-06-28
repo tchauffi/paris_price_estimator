@@ -3,6 +3,7 @@
 import unittest
 
 from price_estimator.datasets.geo_dvf import GeoDVFDataset
+from pathlib import Path
 
 
 class TestGeoDVFDataset(unittest.TestCase):
@@ -20,7 +21,6 @@ class TestGeoDVFDataset(unittest.TestCase):
 
         self.assertEqual(dataset.year, self.default_year)
         self.assertEqual(dataset.departments, self.default_departments)
-        self.assertEqual(dataset.storage_path, self.default_storage_path)
 
     def test_init_with_custom_parameters(self):
         """Test initialization with custom parameters."""
@@ -36,7 +36,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
         self.assertEqual(dataset.year, custom_year)
         self.assertEqual(dataset.departments, custom_departments)
-        self.assertEqual(dataset.storage_path, custom_storage_path)
+        self.assertEqual(dataset.storage_path, Path(custom_storage_path).resolve())
 
     def test_init_with_empty_departments(self):
         """Test initialization with empty departments list."""
@@ -44,7 +44,6 @@ class TestGeoDVFDataset(unittest.TestCase):
 
         self.assertEqual(dataset.year, self.default_year)
         self.assertEqual(dataset.departments, [])
-        self.assertEqual(dataset.storage_path, self.default_storage_path)
 
     def test_get_url_single_year_department(self):
         """Test _get_url method with single year and department."""
@@ -178,6 +177,50 @@ class TestGeoDVFDataset(unittest.TestCase):
         # Both should produce URLs (though content might differ)
         self.assertEqual(len(urls_int), 2)
         self.assertTrue(all(url.endswith(".csv.gz") for url in urls_int))
+
+    def test_temp_directory_usage(self):
+        """Test using default temporary directory storage."""
+        dataset = GeoDVFDataset(year=[2023], departments=[75])
+
+        # Should use default temp directory location
+        self.assertTrue(str(dataset.storage_path).endswith("geo_dvf_cache"))
+        self.assertTrue(dataset.storage_path.exists())
+
+        # Clean up
+        dataset.cleanup()
+
+    def test_persistent_storage(self):
+        """Test using persistent storage."""
+        custom_path = "test_data/geo_dvf"
+        dataset = GeoDVFDataset(
+            year=[2023],
+            departments=[75],
+            storage_path=custom_path,
+        )
+
+        path_parts = str(dataset.storage_path).split("/")[-2:]
+        self.assertEqual(path_parts, ["test_data", "geo_dvf"])
+
+    def test_basic_functionality(self):
+        """Test basic functionality without context manager."""
+        dataset = GeoDVFDataset(year=[2023], departments=[75])
+        self.assertTrue(dataset.storage_path.exists())
+
+        # Test that storage path is persistent
+        storage_path = dataset.storage_path
+        self.assertTrue(storage_path.exists())
+
+    def test_cleanup_method(self):
+        """Test the cleanup method."""
+        dataset = GeoDVFDataset(year=[2023], departments=[75])
+        temp_path = dataset.storage_path
+
+        # Storage path should exist
+        self.assertTrue(temp_path.exists())
+
+        # After cleanup, specific files should be cleaned but not the directory
+        dataset.cleanup()
+        # Note: cleanup() only removes files for requested years/departments
 
 
 if __name__ == "__main__":
