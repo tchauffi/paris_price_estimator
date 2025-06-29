@@ -12,7 +12,7 @@ class TestGeoDVFDataset(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
         self.default_year = [2023]
-        self.default_departments = [75, 92, 93, 94]
+        self.default_departments = ["75", "92", "93", "94"]
         self.default_storage_path = "data/geo_dvf"
 
     def test_init_with_defaults(self):
@@ -25,7 +25,7 @@ class TestGeoDVFDataset(unittest.TestCase):
     def test_init_with_custom_parameters(self):
         """Test initialization with custom parameters."""
         custom_year = [2022, 2023]
-        custom_departments = [75, 92]
+        custom_departments = ["75", "92"]
         custom_storage_path = "custom/path"
 
         dataset = GeoDVFDataset(
@@ -49,7 +49,7 @@ class TestGeoDVFDataset(unittest.TestCase):
         """Test _get_url method with single year and department."""
         dataset = GeoDVFDataset(year=[2023])
 
-        url = dataset._get_url(2023, 75)
+        url = dataset._get_url(2023, "75")
         expected_url = (
             "https://files.data.gouv.fr/geo-dvf/latest/csv/2023/departements/75.csv.gz"
         )
@@ -60,7 +60,7 @@ class TestGeoDVFDataset(unittest.TestCase):
         """Test _get_url method with different year and department."""
         dataset = GeoDVFDataset(year=[2022])
 
-        url = dataset._get_url(2022, 92)
+        url = dataset._get_url(2022, "92")
         expected_url = (
             "https://files.data.gouv.fr/geo-dvf/latest/csv/2022/departements/92.csv.gz"
         )
@@ -69,7 +69,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_get_urls_single_year_single_department(self):
         """Test get_urls method with single year and department."""
-        dataset = GeoDVFDataset(year=[2023], departments=[75])
+        dataset = GeoDVFDataset(year=[2023], departments=["75"])
 
         urls = dataset.get_urls()
         expected_urls = [
@@ -80,7 +80,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_get_urls_single_year_multiple_departments(self):
         """Test get_urls method with single year and multiple departments."""
-        dataset = GeoDVFDataset(year=[2023], departments=[75, 92])
+        dataset = GeoDVFDataset(year=[2023], departments=["75", "92"])
 
         urls = dataset.get_urls()
         expected_urls = [
@@ -92,7 +92,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_get_urls_multiple_years_single_department(self):
         """Test get_urls method with multiple years and single department."""
-        dataset = GeoDVFDataset(year=[2022, 2023], departments=[75])
+        dataset = GeoDVFDataset(year=[2022, 2023], departments=["75"])
 
         urls = dataset.get_urls()
         expected_urls = [
@@ -104,7 +104,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_get_urls_multiple_years_multiple_departments(self):
         """Test get_urls method with multiple years and departments."""
-        dataset = GeoDVFDataset(year=[2022, 2023], departments=[75, 92])
+        dataset = GeoDVFDataset(year=[2022, 2023], departments=["75", "92"])
 
         urls = dataset.get_urls()
         expected_urls = [
@@ -141,7 +141,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_get_urls_empty_year(self):
         """Test get_urls method with empty year list."""
-        dataset = GeoDVFDataset(year=[], departments=[75])
+        dataset = GeoDVFDataset(year=[], departments=["75"])
 
         urls = dataset.get_urls()
         expected_urls = []
@@ -153,7 +153,7 @@ class TestGeoDVFDataset(unittest.TestCase):
         dataset = GeoDVFDataset(year=[2023])
 
         # Test with different data types for department
-        url_int = dataset._get_url(2023, 75)
+        url_int = dataset._get_url(2023, "75")
         url_str = dataset._get_url(2023, "75")
 
         # Both should work and produce valid URLs
@@ -170,17 +170,16 @@ class TestGeoDVFDataset(unittest.TestCase):
         """Test that departments can handle different types."""
         # Test with string departments
 
-        # Test with integer departments
-        dataset_int = GeoDVFDataset(year=[2023], departments=[75, 92])
-        urls_int = dataset_int.get_urls()
+        # Test with string departments
+        dataset_str = GeoDVFDataset(year=[2023], departments=["75", "92"])
+        urls_str = dataset_str.get_urls()
 
-        # Both should produce URLs (though content might differ)
-        self.assertEqual(len(urls_int), 2)
-        self.assertTrue(all(url.endswith(".csv.gz") for url in urls_int))
+        self.assertEqual(len(urls_str), 2)
+        self.assertTrue(all(url.endswith(".csv.gz") for url in urls_str))
 
     def test_temp_directory_usage(self):
         """Test using default temporary directory storage."""
-        dataset = GeoDVFDataset(year=[2023], departments=[75])
+        dataset = GeoDVFDataset(year=[2023], departments=["75"])
 
         # Should use default temp directory location
         self.assertTrue(str(dataset.storage_path).endswith("geo_dvf_cache"))
@@ -194,7 +193,7 @@ class TestGeoDVFDataset(unittest.TestCase):
         custom_path = "test_data/geo_dvf"
         dataset = GeoDVFDataset(
             year=[2023],
-            departments=[75],
+            departments=["75"],
             storage_path=custom_path,
         )
 
@@ -203,7 +202,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_basic_functionality(self):
         """Test basic functionality without context manager."""
-        dataset = GeoDVFDataset(year=[2023], departments=[75])
+        dataset = GeoDVFDataset(year=[2023], departments=["75"])
         self.assertTrue(dataset.storage_path.exists())
 
         # Test that storage path is persistent
@@ -212,7 +211,7 @@ class TestGeoDVFDataset(unittest.TestCase):
 
     def test_cleanup_method(self):
         """Test the cleanup method."""
-        dataset = GeoDVFDataset(year=[2023], departments=[75])
+        dataset = GeoDVFDataset(year=[2023], departments=["75"])
         temp_path = dataset.storage_path
 
         # Storage path should exist
@@ -221,6 +220,48 @@ class TestGeoDVFDataset(unittest.TestCase):
         # After cleanup, specific files should be cleaned but not the directory
         dataset.cleanup()
         # Note: cleanup() only removes files for requested years/departments
+
+    def test_departments_validation_invalid_type(self):
+        """Test that invalid department types raise ValueError."""
+        with self.assertRaises(ValueError) as context:
+            GeoDVFDataset(year=[2023], departments=[75, 92])
+
+        self.assertIn(
+            "All elements in departments must be strings", str(context.exception)
+        )
+
+    def test_departments_validation_mixed_types(self):
+        """Test that mixed types in departments raise ValueError."""
+        with self.assertRaises(ValueError) as context:
+            # mixed string and int
+            GeoDVFDataset(year=[2023], departments=["75", 92])
+
+        self.assertIn(
+            "All elements in departments must be strings", str(context.exception)
+        )
+
+    def test_departments_validation_not_list(self):
+        """Test that non-list departments raise ValueError."""
+        with self.assertRaises(ValueError) as context:
+            GeoDVFDataset(year=[2023], departments="75")
+
+        self.assertIn("Departments must be a list of strings", str(context.exception))
+
+    def test_year_validation_invalid_type(self):
+        """Test that invalid year types raise ValueError."""
+        with self.assertRaises(ValueError) as context:
+            # string instead of list
+            GeoDVFDataset(year="2023", departments=["75"])
+
+        self.assertIn("Year must be a list of integers", str(context.exception))
+
+    def test_year_validation_invalid_elements(self):
+        """Test that invalid year elements raise ValueError."""
+        with self.assertRaises(ValueError) as context:
+            # string instead of int
+            GeoDVFDataset(year=["2023"], departments=["75"])
+
+        self.assertIn("All elements in year must be integers", str(context.exception))
 
 
 if __name__ == "__main__":

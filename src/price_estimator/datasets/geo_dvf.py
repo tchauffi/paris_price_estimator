@@ -4,7 +4,6 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 import requests
-import tempfile
 
 
 class GeoDVFDataset:
@@ -13,7 +12,7 @@ class GeoDVFDataset:
     def __init__(
         self,
         year: list[int],
-        departments: list[int] = [75, 92, 93, 94],
+        departments: list[str] = ["75", "92", "93", "94"],
         storage_path: str | None = None,
         dataset_url: str = "https://files.data.gouv.fr/geo-dvf/latest/csv",
     ):
@@ -21,7 +20,7 @@ class GeoDVFDataset:
 
         Args:
             year (list[int]): List of years for the dataset.
-            departments (list[int], optional): List of departments to filter.
+            departments (list[str], optional): List of departments to filter.
                 Defaults to IdF departments.
             storage_path (str, optional): Path to store the dataset.
                 If None, uses a persistent temp directory.
@@ -30,18 +29,18 @@ class GeoDVFDataset:
 
         Raises:
             ValueError: If year is not a list of integers or if departments is
-                not a list of integers.
+                not a list of strings.
             ValueError: If any element in year or departments is not an
-                integer.
+                integer or string respectively.
         """
         if not isinstance(year, list):
             raise ValueError("Year must be a list of integers.")
         if not all(isinstance(y, int) for y in year):
             raise ValueError("All elements in year must be integers.")
         if not isinstance(departments, list):
-            raise ValueError("Departments must be a list of integers.")
-        if not all(isinstance(d, int) for d in departments):
-            raise ValueError("All elements in departments must be integers.")
+            raise ValueError("Departments must be a list of strings.")
+        if not all(isinstance(d, str) for d in departments):
+            raise ValueError("All elements in departments must be strings.")
 
         self.url = dataset_url
         self.year = year
@@ -49,14 +48,14 @@ class GeoDVFDataset:
 
         # Determine storage path - default to persistent temp directory
         if storage_path is None:
-            temp_base = Path(tempfile.gettempdir()) / "geo_dvf_cache"
+            temp_base = Path("/tmp") / "geo_dvf_cache"
             self.storage_path = temp_base
         else:
             self.storage_path = Path(storage_path).resolve()
 
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
-    def _get_filename(self, year: int, department: int) -> str:
+    def _get_filename(self, year: int, department: str) -> str:
         """Get the filename for a specific year and department.
 
         Args:
@@ -68,7 +67,7 @@ class GeoDVFDataset:
         """
         return f"{department}.csv.gz"
 
-    def _get_filepath(self, year: int, department: int) -> Path:
+    def _get_filepath(self, year: int, department: str) -> Path:
         """Get the full filepath for a specific year and department.
 
         Args:
@@ -81,7 +80,7 @@ class GeoDVFDataset:
         filename = self._get_filename(year, department)
         return self.storage_path / f"{year}_{filename}"
 
-    def _get_url(self, year: int, department: int) -> str:
+    def _get_url(self, year: int, department: str) -> str:
         """Get the URL for the Geo DVF dataset.
 
         Args:
@@ -188,13 +187,20 @@ class GeoDVFDataset:
 
         for file in files:
             file.unlink()
+
+        # Remove the storage directory if empty
+        if not any(self.storage_path.iterdir()):
+            self.storage_path.rmdir()
+            print(f"Removed empty directory: {self.storage_path}")
+        else:
+            print(f"Directory {self.storage_path} is not empty, not removed.")
         print(f"Cleaned up {len(files)} files from {self.storage_path}")
 
 
 if __name__ == "__main__":
     # Example 1: Basic usage with default temp storage
     print("=== Example 1: Basic usage with default temp storage ===")
-    dataset = GeoDVFDataset(year=[2023], departments=[75])
+    dataset = GeoDVFDataset(year=[2023], departments=["75"])
     print("Dataset URLs:", dataset.get_urls())
     print("Storage path:", dataset.storage_path)
     dataset.download()
@@ -207,7 +213,7 @@ if __name__ == "__main__":
 
     # Example 2: Multiple years and departments
     print("=== Example 2: Multiple years and departments ===")
-    dataset_multi = GeoDVFDataset(year=[2022, 2023], departments=[75, 92])
+    dataset_multi = GeoDVFDataset(year=[2022, 2023], departments=["75", "92"])
     print(f"Will download {len(dataset_multi.get_urls())} files")
     dataset_multi.download()  # Only missing files will be downloaded
     df_multi = dataset_multi.open_db()
@@ -217,9 +223,12 @@ if __name__ == "__main__":
     # Example 3: Custom storage path
     print("=== Example 3: Custom storage path ===")
     custom_dataset = GeoDVFDataset(
-        year=[2023], departments=[75], storage_path="data/custom_geo_dvf"
+        year=[2023], departments=["75"], storage_path="data/custom_geo_dvf"
     )
     print("Custom storage path:", custom_dataset.storage_path)
     custom_dataset.download()
     print("Files will persist in the custom directory!")
     print("Remember to use cleanup() if you want to free disk space later.")
+    # Cleanup files if needed
+    custom_dataset.cleanup()
+    print("Cleanup completed.")
